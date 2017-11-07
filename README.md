@@ -22,7 +22,7 @@ Team:
 
 # Project Plan, Backlog & Tracker
 
-I will create an actions tracker to help alignment towards a high-level plan. I hope we can track to this and keep eachother updated, to understand where we are in real time. This will be a GoogleSheet document; link to follow soon.
+I have created an actions tracker to help alignment towards a high-level plan. I hope we can track to this and keep eachother updated, to understand where we are in real time. This comprises a GoogleSheet document, which can be found at https://docs.google.com/spreadsheets/d/1iw5dNL4kMnFnwyHyoqgyGfzPhCI-4PX7P7ThLXq8II4/edit?usp=sharing
 
 
 
