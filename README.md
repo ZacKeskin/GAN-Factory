@@ -8,16 +8,15 @@ Team:
 - Lena Petersen
 
 
-# Project Ideas
+# Project 
 
-- Ideally, something interactive that will play well at the presentation.
-- This is the link we discussed, as simple food for thought: [Deep Learning Ideas](https://elitedatascience.com/machine-learning-projects-for-beginners)
-- Also [Kaggle for datasets and inspiration from their challenges](https://www.kaggle.com/datasets)
-- Suggestion of using image or audio recognition. 
-- Need to decide on GAN (/DiscoGAN), CNN, etc. - what are the benefits/challenges in each choice - I imagine it depends on the task we are trying to complete so need to agree functionality first.
+- Comparing the performance of WGANs, DiscoGANs, CycleGANs etc. in style transfer in human faces
 
- *Note we need to confirm with Nic whether our chosen project is sufficient and get his feedback.*
- *We also need to schedule >2 (but assuming the more, the better) meetings with TAs/Nic during the project*
+- Style transfer to be investigated along lines of gender, age and emotion
+
+- Training data to be a subset from the WIKI dataset https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/
+
+- *We also need to schedule >2 (but assuming the more, the better) meetings with TAs/Nic during the project*
 
 
 # Project Plan, Backlog & Tracker
@@ -37,18 +36,16 @@ To update this section with information on how we are graded regarding individua
 The simplest way to align a common codebase is to install anaconda:
 https://www.anaconda.com/download/#macos
 
-Additionally you will need to install Keras. 
+Most packages required are included as part of anaconda. Additionally we require raw TensorFlow
 
 You should be able to simply run:
 ``` 
 pip install TensorFlow
 ```
-```
-pip install Keras
-```
+
 (you may need sudo depending on your local permissions)
 
-However, in case this is not sufficient then In the repo I have also included the instructions provided by Nic Lane. Realistically you will not need to follow these in detail, as Anaconda includes most of the dependencies. The final step includes copying and running a sample DL program, which imports MNIST data, trains a model on a large portion of it and then tests the remainder on the trained model.
+
 
 
 
@@ -58,5 +55,4 @@ I suggest we use Jupyter notebooks to build and share the code within out work. 
 
 This is simple if you  `cd` into the cloned repo on your local machine and then type: `jupyter notebook` , and paste the link produced into your browser.
 
-If you do that you will see some initial test code I've provided that i was looking into; the idea is to load the model trained on the MNIST data set (the HFD5 datafile provided in the /Models folder within the Repo and then see if it can correctly classify an image of a numeral (nine.jpg). I didn't get it to do that yet - but hopefully food for thought.
 

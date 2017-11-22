@@ -101,5 +101,9 @@ ENV/
 .mypy_cache/
 
 # Images
+/wiki
 *.jpg
 *.jpeg
+
+# Private
+*private*
