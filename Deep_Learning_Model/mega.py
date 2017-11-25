@@ -339,7 +339,7 @@ def train():
     image_batch2, samples_num2 = input_data()
     
 
-    batch_num = int(samples_num / samples_num)
+    batch_num = int(samples_num / batch_size)
     total_batch = 0
     #start the tf session
     #pdb.set_trace()
