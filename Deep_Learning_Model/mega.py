@@ -11,12 +11,13 @@ import pdb
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from utils import *
+import imghdr
 
 slim = tf.contrib.slim
 
 HEIGHT, WIDTH, CHANNEL = 64, 64, 3
 BATCH_SIZE = 64
-EPOCH = 5
+EPOCH = 1000
 os.environ['CUDA_VISIBLE_DEVICES'] = '15' #TODO: can we comment to explain what this is?
 version = 'NewFaces'
 output_path = './' + version
@@ -36,8 +37,9 @@ def target_data():
 
     #for each item in the data folder...put that image into the images array    
     for each in os.listdir(target_dir):
-        images.append(os.path.join(target_dir,each))
-   
+        if imghdr.what(os.path.join(target_dir,each)) != None:
+            images.append(os.path.join(target_dir,each))
+
     
     
     # Convert all the images in the images array to tensors (strings)
@@ -82,7 +84,8 @@ def input_data():
     images = []
 
     for each in os.listdir(input_dir):
-        images.append(os.path.join(input_dir,each))
+        if imghdr.what(os.path.join(input_dir,each)) != None:
+            images.append(os.path.join(input_dir,each))
     
     
     all_images = tf.convert_to_tensor(images, dtype = tf.string)
@@ -362,10 +365,13 @@ def train():
     print('batch size: %d, batch num per epoch: %d, epoch num: %d' % (batch_size, batch_num, EPOCH))
     print('start training...')
 
+    #tf.initialize_all_variables()
+    #tf.initialize_local_variables()
+
     for i in range(EPOCH):
-        print('Epoch: ' + str(i))
+        print('\n Epoch: ' + str(i+1) + ' of ' + EPOCH) #i+1 due to python's zero-indexing
         for j in range(batch_num):
-            print('Batch: ' + str(j))
+            print('\n Batch: ' + str(j) + ' of ' + str(batch_num)) #i+1 due to python's zero-indexing
             d_iters = 2
             g_iters = 1
 
@@ -385,12 +391,13 @@ def train():
             for k in range(g_iters):
                 
                 _, gLoss = sess.run([trainer_g, g_loss],
-                                   feed_dict={people_image: train_image2, is_train: True})                      
-        # save check point every 500 epoch
-        if i%500 == 0:
-            if not os.path.exists('./model/' + version):
-                os.makedirs('./model/' + version)
-            saver.save(sess, './model/' +version + '/' + str(i))  
+                                   feed_dict={people_image: train_image2, is_train: True})   
+
+        # save check point every 100 epochs
+        if i%100 == 0:
+            if not os.path.exists('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())):
+                os.makedirs('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
+            saver.save(sess, './checkpoints/' +'{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))  
         if i%5 == 0:
             # save images
             if not os.path.exists(output_path):
