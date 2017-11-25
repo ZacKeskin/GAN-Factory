@@ -181,7 +181,7 @@ def generator(input, is_train, reuse=False):
 def generator2(input, is_train, reuse=False):
     c2, c4, c8, c16 = 32, 64, 128, 256  # channel num: 64, 128, 256, 512
     output_dim = CHANNEL
-    with tf.variable_scope('gene') as scope:
+    with tf.variable_scope('gen2') as scope:
         if reuse:
             scope.reuse_variables()
         
@@ -293,16 +293,65 @@ def discriminator(input, is_train, reuse=False):
         acted_out = tf.nn.sigmoid(logits)
         return logits #return a value between 0 and 1
 
+def discriminator2(input, is_train, reuse=False):
+    c2, c4, c8, c16 = 32, 64, 128, 256  # channel num: 64, 128, 256, 512
+    with tf.variable_scope('dis2') as scope:
+        if reuse:
+            scope.reuse_variables()
+         
+        #Convolution, activation, bias, repeat! 
+        conv1 = tf.layers.conv2d(input, c2, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
+                                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
+                                 name='conv1')
+        bn1 = tf.contrib.layers.batch_norm(conv1, is_training = is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope = 'bn1')
+        act1 = lrelu(bn1, n='act1')
 
+         #Convolution, activation, bias, repeat! 
+        conv2 = tf.layers.conv2d(act1, c4, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
+                                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
+                                 name='conv2')
+        bn2 = tf.contrib.layers.batch_norm(conv2, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn2')
+        act2 = lrelu(bn2, n='act2')
+        #Convolution, activation, bias, repeat! 
+        conv3 = tf.layers.conv2d(act2, c8, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
+                                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
+                                 name='conv3')
+        bn3 = tf.contrib.layers.batch_norm(conv3, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn3')
+        act3 = lrelu(bn3, n='act3')
+         #Convolution, activation, bias, repeat! 
+        conv4 = tf.layers.conv2d(act3, c16, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
+                                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
+                                 name='conv4')
+        bn4 = tf.contrib.layers.batch_norm(conv4, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn4')
+        act4 = lrelu(bn4, n='act4')
+       
+        # start from act4
+        dim = int(np.prod(act4.get_shape()[1:]))
+        #convert the 4*4*256 tensor into a flat and fully connectecd layer
+        fc1 = tf.reshape(act4, shape=[-1, dim], name='fc1')
+      
+        #intialise random weight variables
+        w2 = tf.get_variable('w2', shape=[fc1.shape[-1], 1], dtype=tf.float32,
+                             initializer=tf.truncated_normal_initializer(stddev=0.02))
+        #intialize random bias variables
+        b2 = tf.get_variable('b2', shape=[1], dtype=tf.float32,
+                             initializer=tf.constant_initializer(0.0))
+
+        # multiply the weights by the fully connected layer add the biases (multiplying 4096 row vector by 4096 column vector giving 1 number )
+        logits = tf.add(tf.matmul(fc1, w2), b2, name='logits')
+        # perform sigmoid on the one number putting the value of the number between 0 and 1.
+        acted_out = tf.nn.sigmoid(logits)
+        return logits #return a value between 0 and 1
+    
 def train():
  
    print(os.environ['CUDA_VISIBLE_DEVICES'])
     
     with tf.variable_scope('input'):
         #real image placeholder
-        real_female_image = tf.placeholder(tf.float32, shape = [None, HEIGHT, WIDTH, CHANNEL], name='real_image')
+        real_female_image = tf.placeholder(tf.float32, shape = [None, HEIGHT, WIDTH, CHANNEL], name='real_female_image')
         #fake image place holder
-        real_male_image = tf.placeholder(tf.float32, shape = [None, HEIGHT, WIDTH, CHANNEL], name='people_image')
+        real_male_image = tf.placeholder(tf.float32, shape = [None, HEIGHT, WIDTH, CHANNEL], name='real_male_image')
         is_train = tf.placeholder(tf.bool, name='is_train')
     
     #feed the fake image into the generator.
@@ -342,9 +391,15 @@ def train():
     #returns a list of trainable variables (likes weights and biases)
     t_vars = tf.trainable_variables()
     #trainable discriminator variables are stored in d_vars
-    d_vars = [var for var in t_vars if 'dis' in var.name ]
+    d_female_vars = [var for var in t_vars if 'dis' in var.name ]
+    d_male_vars = [var for var in t_vars if 'dis2' in var.name ]
+    
+    d_vars = [d_female_vars,d_male_vars]
     #trainable generator variables are stored in g_vars
-    g_vars = [var for var in t_vars if 'gen' in var.name]
+    g_female_vars = [var for var in t_vars if 'gen' in var.name]
+    g_male_vars = [var for var in t_vars if 'gen2' in var.name]
+    
+    g_vars= [g_female_vars,g_male_vars]
    
     #minmise the d_loss using the rms optimizer by altering the discriminator weights and biases      
     trainer_d = tf.train.RMSPropOptimizer(learning_rate=2e-3).minimize(d_loss, var_list=d_vars)
