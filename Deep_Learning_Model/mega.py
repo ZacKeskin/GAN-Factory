@@ -17,7 +17,7 @@ slim = tf.contrib.slim
 
 HEIGHT, WIDTH, CHANNEL = 64, 64, 3
 BATCH_SIZE = 64
-EPOCH = 1000
+EPOCH = 2000
 os.environ['CUDA_VISIBLE_DEVICES'] = '15' #TODO: can we comment to explain what this is?
 version = 'NewFaces'
 output_path = './' + version
@@ -365,9 +365,7 @@ def train():
     print('batch size: %d, batch num per epoch: %d, epoch num: %d' % (batch_size, batch_num, EPOCH))
     print('start training...')
 
-    #tf.initialize_all_variables()
-    #tf.initialize_local_variables()
-
+   
     for i in range(EPOCH):
         print('\n Epoch: ' + str(i+1) + ' of ' + EPOCH) #i+1 due to python's zero-indexing
         for j in range(batch_num):

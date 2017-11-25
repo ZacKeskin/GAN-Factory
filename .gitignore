@@ -114,3 +114,6 @@ NewFaces/
 
 # Zip files
 *.zip
+
+# OSX hidden files
+.DS_Store
