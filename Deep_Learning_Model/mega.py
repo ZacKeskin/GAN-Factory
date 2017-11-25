@@ -296,34 +296,53 @@ def discriminator(input, is_train, reuse=False):
 
 def train():
  
-    print('CUDA Visible Devices: ' + str(os.environ['CUDA_VISIBLE_DEVICES'])) 
+   print(os.environ['CUDA_VISIBLE_DEVICES'])
     
     with tf.variable_scope('input'):
         #real image placeholder
-        real_image = tf.placeholder(tf.float32, shape = [None, HEIGHT, WIDTH, CHANNEL], name='real_image')
+        real_female_image = tf.placeholder(tf.float32, shape = [None, HEIGHT, WIDTH, CHANNEL], name='real_image')
         #fake image place holder
-        people_image = tf.placeholder(tf.float32, shape = [None, HEIGHT, WIDTH, CHANNEL], name='people_image')
+        real_male_image = tf.placeholder(tf.float32, shape = [None, HEIGHT, WIDTH, CHANNEL], name='people_image')
         is_train = tf.placeholder(tf.bool, name='is_train')
     
     #feed the fake image into the generator.
-    fake_image = generator(people_image, is_train)
-    reconstructed_image = generator2(fake_image, is_train)
-    #feed the real image into the discriminator 
-    real_result = discriminator(real_image, is_train)
-    #feed the output of the generator into the disccriminator
-    fake_result = discriminator(fake_image, is_train, reuse=True)
+    fake_male_image = generator(real_female_image, is_train)
+    reconstructed_female_image = generator2(fake_male_image, is_train)
+
+    fake_female_image = generator2(real_male_image, is_train)
+    reconstructed_male_image = generator(fake_female_image, is_train)
+    
+    #feed the real female image into discriminator (1)
+    real_female_result = discriminator(real_female_image, is_train)
+    #feed the output of generator2 into disccriminator (1)
+    fake_female_result = discriminator(fake_female_image, is_train, reuse=True)
+
+    #feed the real male image into the discriminator (2)
+    real_male_result = discriminator2(real_male_image, is_train)
+    #feed the output of generator (1) into disccriminator (2)
+    fake_male_result = discriminator2(fake_male_image, is_train, reuse=True)
 
     #reconstructed loss
     #pdb.set_trace()
-    reconstructed_loss=tf.metrics.mean_squared_error(people_image, reconstructed_image)
+    reconstructed_female_loss=tf.metrics.mean_squared_error(real_female_image, reconstructed_female_image)
+    reconstructed_male_loss=tf.metrics.mean_squared_error(real_male_image, reconstructed_male_image)
+
+
     #calculate the loss between the generated image and real image
-    d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)  # This optimizes the discriminator.
-    g_loss = -tf.reduce_mean(fake_result) + tf.reduce_mean(reconstructed_loss) # This optimizes the generator. # This optimizes the generator.
-       
+    d_female_loss = tf.reduce_mean(fake_female_result) - tf.reduce_mean(real_female_result)  # This optimizes discriminator (1).
+    d_male_loss = tf.reduce_mean(fake_male_result) - tf.reduce_mean(real_male_result)  # This optimizes discriminator (2).
+    
+    d_loss = d_female_loss + d_male_loss
+
+    generator_loss = -tf.reduce_mean(fake_male_result)  +tf.reduce_mean(fake_female_result) # This optimizes the generators.
+    
+    reconstructed_loss = tf.reduce_mean(reconstructed_female_loss) + tf.reduce_mean(reconstructed_male_loss) # This optimizes the generators.
+
+    g_loss= generator_loss + reconstructed_loss
     #returns a list of trainable variables (likes weights and biases)
     t_vars = tf.trainable_variables()
     #trainable discriminator variables are stored in d_vars
-    d_vars = [var for var in t_vars if 'dis' in var.name]
+    d_vars = [var for var in t_vars if 'dis' in var.name ]
     #trainable generator variables are stored in g_vars
     g_vars = [var for var in t_vars if 'gen' in var.name]
    
