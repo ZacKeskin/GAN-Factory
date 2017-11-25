@@ -21,6 +21,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '15' #TODO: can we comment to explain what 
 version = 'NewFaces'
 output_path = './' + version
 
+print('Warming up...')
 # Function to calculate leaky ReLu 
 def lrelu(x, n, leak=0.2): 
     return tf.maximum(x, leak * x, name=n) 
@@ -89,7 +90,7 @@ def input_data():
     images_queue = tf.train.slice_input_producer([all_images])
                                         
     content = tf.read_file(images_queue[0])
-    image = tf.image.decode_jpeg(content, channels = CHANNEL)
+    image = tf.image.decode_image(content, channels = CHANNEL)
 
     image = tf.image.random_flip_left_right(image)
     image = tf.image.random_brightness(image, max_delta = 0.1)
@@ -390,7 +391,7 @@ def train():
             if not os.path.exists('./model/' + version):
                 os.makedirs('./model/' + version)
             saver.save(sess, './model/' +version + '/' + str(i))  
-        if i%50 == 0:
+        if i%5 == 0:
             # save images
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
@@ -429,4 +430,5 @@ def train():
 if __name__ == "__main__":
     train()
    # test()
+
 
