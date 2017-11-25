@@ -107,3 +107,7 @@ ENV/
 
 # Private
 *private*
+vscode/
+
+# Code Outputs
+NewFaces/
