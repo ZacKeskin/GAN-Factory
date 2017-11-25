@@ -111,3 +111,6 @@ vscode/
 
 # Code Outputs
 NewFaces/
+
+# Zip files
+*.zip
