@@ -75,10 +75,8 @@ def target_data():
     return iamges_batch, num_images
 
 # Do the same for the images to be converted
-def input_data():   
-    current_dir = os.getcwd()
+def input_data(input_dir):   
    
-    input_dir = os.path.join(current_dir, 'Male')
     images = []
 
     for each in os.listdir(input_dir):
