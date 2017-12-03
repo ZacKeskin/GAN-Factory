@@ -26,23 +26,24 @@ from createGAN import GAN
 # Examples!
 
 HEIGHT, WIDTH, CHANNEL = 64, 64, 3
-BATCH_SIZE = 64
-EPOCH = 10
+BATCH_SIZE = 8
+EPOCH = 100
 
-input_dir = os.path.join(os.getcwd(),'Male_Faces') 
-target_dir = os.path.join(os.getcwd(),'Female_Faces')
-
+input_dir = os.path.join(os.getcwd(),'data','Male_Faces','train') 
+target_dir = os.path.join(os.getcwd(),'data', 'Female_Faces','train')
+output_dir = os.path.join(os.getcwd(),'GAN_Model_Training')
 
 # Standard GAN
 mystandardgan = GAN(GANtype="Standard",kernel_size=[5,5])
-
-"""mystandardgan.train(input_dir=input_dir, 
+"""
+mystandardgan.train(input_dir=input_dir, 
                 target_dir=target_dir, 
                 batch_size=BATCH_SIZE, 
                 n_epochs=EPOCH,
                 img_height=HEIGHT,
                 img_width=WIDTH,
-                img_channels=CHANNEL
+                img_channels=CHANNEL,
+                output_dir=output_dir
                 )
 """
 
@@ -55,8 +56,10 @@ myRLgan.train(input_dir=input_dir,
                 n_epochs=EPOCH,
                 img_height=HEIGHT,
                 img_width=WIDTH,
-                img_channels=CHANNEL
+                img_channels=CHANNEL,
+                output_dir=output_dir
                 )
+
 
 # Discovery GAN
 mydiscogan = GAN(GANtype='DiscoGAN',kernel_size=[5,5])

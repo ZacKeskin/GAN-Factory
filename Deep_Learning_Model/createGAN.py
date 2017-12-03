@@ -1,6 +1,9 @@
 import os
 import tensorflow as tf
 import numpy as np
+import datetime
+from utils import *
+
 
 def lrelu(x, n, leak=0.2): 
             return tf.maximum(x, leak * x, name=n) 
@@ -211,21 +214,23 @@ class GAN():
                 n_epochs=10,
                 img_height=64,
                 img_width=64,
-                img_channels=3
+                img_channels=3,
+                output_dir=os.getcwd()
                 ):  #optimiser,loss, checkpoint_after_epoch
         #self.batch_size = batch_size
         #self.n_epochs = n_epochs
 
+        output_dir = os.path.join(output_dir, self.GANtype)
         input_batch, input_count = Tensorfy_images(input_dir,img_height,img_width,img_channels,batch_size)
-        target_batch, target_count = Tensorfy_images(input_dir,img_height,img_width,img_channels,batch_size)
+        target_batch, target_count = Tensorfy_images(target_dir,img_height,img_width,img_channels,batch_size)
         batch_count = int(input_count / batch_size) 
         total_batch = 0
-
+        
 
         # ------ Model-Specific Training Steps------- #
 
         if self.GANtype.upper() == "STANDARD": 
-            print('Training Standard GAN')
+            print('\n Training Standard GAN \n')
             with tf.variable_scope('input'):
                 is_train = tf.placeholder(tf.bool, name='is_train')
                 # Real image placeholder
@@ -250,7 +255,7 @@ class GAN():
             
             
         elif self.GANtype.upper() == "RECLOSS":
-            print('Training GAN with Reconstruction Loss')
+            print('\n Training GAN with Reconstruction Loss \n')
             with tf.variable_scope('input'):
                 # Real image placeholder
                 input_image = tf.placeholder(tf.float32, shape = [None, img_height, img_width, img_channels])
@@ -325,11 +330,11 @@ class GAN():
         for i in range(n_epochs):
             print('\n Epoch: ' + str(i+1) + ' of ' + str(n_epochs)) #i+1 due to python's zero-indexing
             for j in range(batch_count):
-                print('\n Batch: ' + str(j) + ' of ' + str(batch_count)) #i+1 due to python's zero-indexing
+                print('\n Batch: ' + str(j+1) + ' of ' + str(batch_count)) #i+1 due to python's zero-indexing
                 d_iters = 2
                 g_iters = 1
 
-                print('Discriminator loss:   ' + trainer_d)
+                #`print('Discriminator loss:   ' + trainer_d)
                 
                 # Update the discriminator
                 for k in range(d_iters):
@@ -343,20 +348,27 @@ class GAN():
                     _, gLoss = sess.run([trainer_g, g_loss],feed_dict={target_image: train_image2, is_train: True})   
 
             # Save check point every 100 epochs
-            if i%100 == 0:
+            if (i+1)%100 == 0:
                 if not os.path.exists('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())):
                     os.makedirs('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
                 saver.save(sess, './checkpoints/' +'{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))  
-            if i%5 == 0:
+            if (i+1)%5 == 0:
                 # save images every 5 epochs
-                if not os.path.exists(output_path):
-                    os.makedirs(output_path)
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
                 
                 imgtest = sess.run(fake_image, feed_dict={target_image: train_image2, is_train: False})
 
-                save_images(imgtest, [8,8] ,output_path + '/epoch' + str(i) + '.jpg')
+                if batch_size > 8:
+                    rows = 8
+                    columns = int(batch_size / 8)
+                else:
+                    rows = 1
+                    columns = batch_size
+                    
+                save_images(imgtest, [rows,columns] ,output_dir + '/epoch' + str(i+1) + '.jpg')
                 
-                print('train:[%d],d_loss:%f,g_loss:%f' % (i, dLoss, gLoss))
+                print('train:[%d],d_loss:%f,g_loss:%f' % (i+1, dLoss, gLoss))
 
 
         coord.request_stop()

@@ -13,8 +13,8 @@ import custom_loadmat # load Matlab struct into Python
 
 
 # Choose parameters
-choose_dataset = 'Male_Faces'   # Male_Faces or Female_Faces
-faceyness = 5                 #Choose real value between 1 and 7 to be more or less lenient when selecting faces
+choose_dataset = 'Female_Faces'   # Male_Faces or Female_Faces
+faceyness = 6.2               #Choose real value between 1 and 7 to be more or less lenient when selecting faces
 crop_size = 0.05                 #Lenience when cropping - default is maximum crop minus 5%
 train_test_ratio = 0.9
 #TODO: We may also wish to introduce a minimum image size e.g 64x64... 
@@ -73,9 +73,9 @@ for tpl in dataset.itertuples():
         
         # Assign % of data to training and validation sets
         if decision(train_test_ratio) == True:
-            output_folder = os.path.join(current_directory, str(choose_dataset),"train")
+            output_folder = os.path.join(current_directory,'data', str(choose_dataset),"train")
         else:
-            output_folder = os.path.join(current_directory, str(choose_dataset),"test")
+            output_folder = os.path.join(current_directory, 'data', str(choose_dataset),"test")
         
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
