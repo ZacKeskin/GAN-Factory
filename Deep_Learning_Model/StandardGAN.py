@@ -181,70 +181,7 @@ def generator(input, is_train, reuse=False):
 
         return act8 # Return generated image (eventually we want this generator to take in one image and output another that's what we're training it to do)
 
-def generator2(input, is_train, reuse=False):
-    c2, c4, c8, c16 = 32, 64, 128, 256  # channel num: 64, 128, 256, 512
-    output_dim = CHANNEL
-    with tf.variable_scope('gene') as scope:
-        if reuse:
-            scope.reuse_variables()
-        
-        #Convolution, activation, bias, repeat! 
-        conv1 = tf.layers.conv2d(input, c2, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
-                                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
-                                 name='conv1')
-        #regularisation layer in every convolution.
-        bn1 = tf.contrib.layers.batch_norm(conv1, is_training = is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope = 'bn1')
 
-        act1 = lrelu(bn1, n='act1')
-        act1 = tf.nn.dropout(act1, keep_prob=0.5)
-
-         #Convolution, activation, bias, repeat! 
-        conv2 = tf.layers.conv2d(act1, c4, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
-                                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
-                                 name='conv2')
-        bn2 = tf.contrib.layers.batch_norm(conv2, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn2')
-        act2 = lrelu(bn2, n='act2')
-        act2 = tf.nn.dropout(act2, keep_prob=0.5)
-        #Convolution, activation, bias, repeat! 
-        conv3 = tf.layers.conv2d(act2, c8, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
-                                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
-                                 name='conv3')
-        bn3 = tf.contrib.layers.batch_norm(conv3, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn3')
-        act3 = lrelu(bn3, n='act3')
-        act3 = tf.nn.dropout(act3, keep_prob=0.5)
-         #Convolution, activation, bias, repeat! 
-        conv4 = tf.layers.conv2d(act3, c16, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
-                                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
-                                 name='conv4')
-        bn4 = tf.contrib.layers.batch_norm(conv4, is_training=is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope='bn4')
-        act4 = lrelu(bn4, n='act4')
-        act4 = tf.nn.dropout(act4, keep_prob=0.5)
-        #deconvolution, activation, bias, repeat! 
-        conv5 = tf.layers.conv2d_transpose(act4, c8, kernel_size=[5,5], strides =[2,2], padding = "SAME", 
-                                           kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
-                                           name ='conv5')
-        bn5 = tf.contrib.layers.batch_norm(conv5, is_training=is_train, epsilon=1e-5, decay =0.9, updates_collections=None, scope='bn5')
-        act5 = tf.nn.relu(bn5, name='act5')
-        #deconvolution, activation, bias, repeat! 
-        conv6 = tf.layers.conv2d_transpose(act5, c4, kernel_size=[5,5], strides =[2,2], padding = "SAME", 
-                                           kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
-                                           name ='conv6')
-        bn6 = tf.contrib.layers.batch_norm(conv6, is_training=is_train, epsilon=1e-5, decay =0.9, updates_collections=None, scope='bn6')
-        act6 = tf.nn.relu(bn6, name='act6')
-        #deconvolution, activation, bias, repeat! 
-        conv7 = tf.layers.conv2d_transpose(act6, c2, kernel_size=[5,5], strides =[2,2], padding = "SAME", 
-                                           kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
-                                           name ='conv7')
-        bn7 = tf.contrib.layers.batch_norm(conv7, is_training=is_train, epsilon=1e-5, decay =0.9, updates_collections=None, scope='bn7')
-        act7 = tf.nn.relu(bn7, name='act7')
-        #deconvolution, activation, bias, repeat! 
-        conv8 = tf.layers.conv2d_transpose(act7, output_dim, kernel_size=[5,5], strides =[2,2], padding = "SAME", 
-                                           kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
-                                           name ='conv8')
-        bn8 = tf.contrib.layers.batch_norm(conv8, is_training=is_train, epsilon=1e-5, decay =0.9, updates_collections=None, scope='bn8')
-        act8 = tf.nn.relu(bn8, name='act8')
-
-        return act8
 
 def discriminator(input, is_train, reuse=False):
     c2, c4, c8, c16 = 32, 64, 128, 256  # channel num: 64, 128, 256, 512
