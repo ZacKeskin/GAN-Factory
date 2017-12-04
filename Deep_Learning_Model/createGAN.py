@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import datetime
 from utils import *
-
+import imghdr
 
 def lrelu(x, n, leak=0.2): 
             return tf.maximum(x, leak * x, name=n) 
@@ -17,7 +17,8 @@ def Tensorfy_images(dir,HEIGHT,WIDTH,CHANNEL, BATCH_SIZE):
 
     #for each item in the data folder...put that image into the images array    
     for each in os.listdir(target_dir):
-        images.append(os.path.join(target_dir,each))
+        if imghdr.what(os.path.join(target_dir,each)) == 'jpeg':
+            images.append(os.path.join(target_dir,each))
 
     # Convert all the images in the images array to tensors (strings)
     all_images = tf.convert_to_tensor(images, dtype = tf.string)
@@ -226,17 +227,21 @@ class GAN():
         batch_count = int(input_count / batch_size) 
         total_batch = 0
         
+        with tf.variable_scope('input'):
+                # Real image placeholder
+                input_image = tf.placeholder(tf.float32, shape = [None, img_height, img_width, img_channels])
+                # Fake image placeholder
+                target_image = tf.placeholder(tf.float32, shape = [None, img_height, img_width, img_channels])
+                is_train = tf.placeholder(tf.bool, name='is_train')
+
+        # Define these upfront before being assigned
+        #train_image = 0
+        #train_image2 = 0
 
         # ------ Model-Specific Training Steps------- #
 
         if self.GANtype.upper() == "STANDARD": 
             print('\n Training Standard GAN \n')
-            with tf.variable_scope('input'):
-                is_train = tf.placeholder(tf.bool, name='is_train')
-                # Real image placeholder
-                input_image = tf.placeholder(tf.float32, shape = [None, img_height, img_width, img_channels])
-                # Fake image placeholder
-                target_image = tf.placeholder(tf.float32, shape = [None, img_height, img_width, img_channels])
             
             G1 = Generator(kernel_size=self.kernel_size, channel=img_channels, scope='Gen1')
             D1 = Discriminator(kernel_size=self.kernel_size, channel=img_channels, scope='Dis1')
@@ -254,14 +259,10 @@ class GAN():
             g_loss = -tf.reduce_mean(fake_result)  # This optimizes the generator.
             
             
+
         elif self.GANtype.upper() == "RECLOSS":
             print('\n Training GAN with Reconstruction Loss \n')
-            with tf.variable_scope('input'):
-                # Real image placeholder
-                input_image = tf.placeholder(tf.float32, shape = [None, img_height, img_width, img_channels])
-                # Fake image placeholder
-                target_image = tf.placeholder(tf.float32, shape = [None, img_height, img_width, img_channels])
-                is_train = tf.placeholder(tf.bool, name='is_train')
+            
             
             G1 = Generator(self.kernel_size,self.channel, scope = 'Gen1')
             G2 = Generator(self.kernel_size,self.channel, scope = 'Gen2')
@@ -282,11 +283,50 @@ class GAN():
             d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)  # This optimizes the discriminator.
             g_loss = -tf.reduce_mean(fake_result) + tf.reduce_mean(reconstructed_loss) # This optimizes the generator.
             
+            
            
-
         elif self.GANtype.upper() == "DISCOGAN":
             print('Training DiscoGAN')
-            #Discogan.train(self.batch_size, self.n_epochs,self.input_data,self.target_data)
+            
+            G1 = Generator(self.kernel_size,self.channel, scope = 'Gen1')
+            G2 = Generator(self.kernel_size,self.channel, scope = 'Gen2')
+            D1 = Discriminator(kernel_size=self.kernel_size, channel=img_channels, scope = 'Dis1')
+            D2 = Discriminator(kernel_size=self.kernel_size, channel=img_channels, scope = 'Dis2')
+
+
+            fake_image = G1.connect(input_image, is_train)
+            fake_target_image = G2.connect(target_image, is_train)
+
+
+            reconstructed_input_image = G2.connect(fake_image, is_train, reuse=True)
+
+            reconstructed_target_image = G1.connect(fake_target_image, is_train, reuse=True)
+            
+            #feed the real input image into discriminator (1)
+            real_input_result = D1.connect(input_image, is_train)
+            #feed the output of generator2 into discriminator (1)
+            fake_input_result = D1.connect(fake_image, is_train, reuse=True)
+
+            #feed the real male image into the discriminator (2)
+            real_target_result = D2.connect(target_image, is_train)
+            #feed the output of generator (1) into disccriminator (2)
+            fake_target_result = D2.connect(fake_target_image, is_train, reuse=True)
+
+            #reconstructed loss
+            reconstructed_input_loss = tf.metrics.mean_squared_error(input_image, reconstructed_input_image)
+            reconstructed_target_loss = tf.metrics.mean_squared_error(target_image, reconstructed_target_image)
+
+
+            #calculate the loss between the generated image and real image
+            d_input_loss = tf.reduce_mean(fake_input_result) - tf.reduce_mean(real_input_result)  # This optimizes discriminator (1).
+            d_target_loss = tf.reduce_mean(fake_target_result) - tf.reduce_mean(real_target_result)  # This optimizes discriminator (2).
+            d_loss = d_input_loss + d_target_loss
+
+            generator_loss = -(tf.reduce_mean(fake_target_result)  +tf.reduce_mean(fake_input_result)) # This optimizes the generators.
+            reconstructed_loss = tf.reduce_mean(reconstructed_target_loss) + tf.reduce_mean(reconstructed_input_loss) # This optimizes the generators.
+            g_loss= generator_loss + reconstructed_loss
+
+        
 
 
         # ------ Training Steps Applicable to all Models ------- #
@@ -334,30 +374,36 @@ class GAN():
                 d_iters = 2
                 g_iters = 1
 
-                #`print('Discriminator loss:   ' + trainer_d)
-                
                 # Update the discriminator
                 for k in range(d_iters):
                     train_image = sess.run(input_batch)
                     train_image2 = sess.run(target_batch)
                     sess.run(d_clip)
-                    _, dLoss = sess.run([trainer_d, d_loss],feed_dict={target_image: train_image2, input_image: train_image, is_train: True})
+                    if self.GANtype.upper() == 'DISCOGAN':
+                        d_feed_dict = {target_image: train_image2, input_image: train_image, is_train: True}
+                        g_feed_dict = {input_image: train_image, target_image: train_image2,  is_train: True}
+                    else:        
+                        d_feed_dict = {target_image: train_image2, input_image: train_image, is_train: True}
+                        g_feed_dict = {target_image: train_image2, is_train: True}
+                    
+                    _, dLoss = sess.run([trainer_d, d_loss],feed_dict = d_feed_dict)
 
                 # Update the generator
                 for k in range(g_iters): 
-                    _, gLoss = sess.run([trainer_g, g_loss],feed_dict={target_image: train_image2, is_train: True})   
+                    _, gLoss = sess.run([trainer_g, g_loss],feed_dict = g_feed_dict)   
 
             # Save check point every n epochs
             if (i+1)%checkpoint_after_epoch == 0:
                 if not os.path.exists('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())):
                     os.makedirs('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
                 saver.save(sess, './checkpoints/' +'{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))  
-            if (i+1)%5 == 0:
-                # save images every 5 epochs
+            if (i+1)%10 == 0:
+                # save images every 10 epochs
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
                 
-                imgtest = sess.run(fake_image, feed_dict={target_image: train_image2, is_train: False})
+                imgtestG = sess.run(fake_image, feed_dict=g_feed_dict)
+                imgtestD = sess.run(fake_image,feed_dict=d_feed_dict)
 
                 if batch_size > 8:
                     rows = int(batch_size / 8)
@@ -366,8 +412,9 @@ class GAN():
                     rows = 1
                     columns = batch_size
                     
-                save_images(imgtest, [rows,columns] ,output_dir + '/epoch' + str(i+1) + '.jpg')
-                
+                save_images(imgtestG, [rows,columns] ,output_dir + '/Gen_image_epoch' + str(i+1) + '.jpg')
+                save_images(imgtestD, [rows,columns] ,output_dir + '/Dis_image_epoch' + str(i+1) + '.jpg')
+
                 print('train:[%d],d_loss:%f,g_loss:%f' % (i+1, dLoss, gLoss))
 
 
