@@ -26,8 +26,8 @@ from createGAN import GAN
 # Examples!
 
 HEIGHT, WIDTH, CHANNEL = 64, 64, 3
-BATCH_SIZE = 8
-EPOCH = 100
+BATCH_SIZE = 16
+EPOCH = 2000
 
 input_dir = os.path.join(os.getcwd(),'data','Male_Faces','train') 
 target_dir = os.path.join(os.getcwd(),'data', 'Female_Faces','train')
@@ -57,8 +57,8 @@ myRLgan.train(input_dir=input_dir,
                 img_height=HEIGHT,
                 img_width=WIDTH,
                 img_channels=CHANNEL,
-                output_dir=output_dir
-                )
+                output_dir=output_dir,
+                checkpoint_after_epoch=10)
 
 
 # Discovery GAN

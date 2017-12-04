@@ -215,8 +215,8 @@ class GAN():
                 img_height=64,
                 img_width=64,
                 img_channels=3,
-                output_dir=os.getcwd()
-                ):  #optimiser,loss, checkpoint_after_epoch
+                output_dir=os.getcwd(),
+                checkpoint_after_epoch=10):  #optimiser,loss, 
         #self.batch_size = batch_size
         #self.n_epochs = n_epochs
 
@@ -347,8 +347,8 @@ class GAN():
                 for k in range(g_iters): 
                     _, gLoss = sess.run([trainer_g, g_loss],feed_dict={target_image: train_image2, is_train: True})   
 
-            # Save check point every 100 epochs
-            if (i+1)%100 == 0:
+            # Save check point every n epochs
+            if (i+1)%checkpoint_after_epoch == 0:
                 if not os.path.exists('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())):
                     os.makedirs('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
                 saver.save(sess, './checkpoints/' +'{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))  
@@ -360,8 +360,8 @@ class GAN():
                 imgtest = sess.run(fake_image, feed_dict={target_image: train_image2, is_train: False})
 
                 if batch_size > 8:
-                    rows = 8
-                    columns = int(batch_size / 8)
+                    rows = int(batch_size / 8)
+                    columns = 8
                 else:
                     rows = 1
                     columns = batch_size
