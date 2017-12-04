@@ -1,5 +1,5 @@
 import os
-from createGAN import GAN
+from GANfactory import GAN
 
 
 """ Notes -
