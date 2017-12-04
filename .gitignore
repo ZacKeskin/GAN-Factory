@@ -117,3 +117,6 @@ NewFaces/
 
 # OSX hidden files
 .DS_Store
+
+# checkpoint files
+checkpoints/

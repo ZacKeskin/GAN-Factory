@@ -21,7 +21,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '15' #this lets you choose what gpu device 
 version = 'NewFaces'
 output_path = './' + version
 
-print('Warming up...')
+#print('Warming up...')
 # Function to calculate leaky ReLu 
 def lrelu(x, n, leak=0.2): 
     return tf.maximum(x, leak * x, name=n) 
@@ -75,10 +75,8 @@ def target_data():
     return iamges_batch, num_images
 
 # Do the same for the images to be converted
-def input_data():   
-    current_dir = os.getcwd()
+def input_data(input_dir):   
    
-    input_dir = os.path.join(current_dir, 'Male')
     images = []
 
     for each in os.listdir(input_dir):
@@ -111,6 +109,9 @@ def input_data():
 
     return iamges_batch1, num_images1
 
+
+
+
 #takes in a 64*64*3 image and attempts to output a different 64*64*3 image.
 def generator(input, is_train, reuse=False):
     c2, c4, c8, c16 = 32, 64, 128, 256  # channel num: 64, 128, 256, 512
@@ -127,10 +128,7 @@ def generator(input, is_train, reuse=False):
         bn1 = tf.contrib.layers.batch_norm(conv1, is_training = is_train, epsilon=1e-5, decay = 0.9,  updates_collections=None, scope = 'bn1')
 
         act1 = lrelu(bn1, n='act1')
-        act1 = tf.nn.dropout(act1, keep_prob=0.5)
-        #TODO: Can we explain why act1 is being reassigned immediately? Same for all activation layers below...
-
-         #Convolution, activation, bias, repeat! 
+        act1 = tf.nn.dropout(act1, keep_prob=0.5)    
         conv2 = tf.layers.conv2d(act1, c4, kernel_size=[5, 5], strides=[2, 2], padding="SAME",
                                  kernel_initializer=tf.truncated_normal_initializer(stddev=0.02),
                                  name='conv2')
@@ -343,8 +341,7 @@ def discriminator2(input, is_train, reuse=False):
         acted_out = tf.nn.sigmoid(logits)
         return logits #return a value between 0 and 1
     
-def train():
-    print(os.environ['CUDA_VISIBLE_DEVICES'])
+def train(BATCH_SIZE,EPOCH,input_data,target_data):
     
     with tf.variable_scope('input'):
         #real image placeholder
@@ -408,8 +405,8 @@ def train():
 
     
     batch_size = BATCH_SIZE
-    image_batch, samples_num = target_data()
-    image_batch2, samples_num2 = input_data()
+    image_batch, samples_num = target_data #data.target_data()
+    image_batch2, samples_num2 = input_data #data.input_data()
     
 
     batch_num = int(samples_num / batch_size)
@@ -428,8 +425,8 @@ def train():
     sess.run(tf.local_variables_initializer())
     # continue training
     save_path = saver.save(sess, "/tmp/model.ckpt")
-    saver = tf.train.import_meta_graph('./model/NewFaces/7.meta')
-    saver.restore(sess, tf.train.latest_checkpoint('./model/NewFaces/'))
+    #saver = tf.train.import_meta_graph('./model/NewFaces/7.meta')
+    #saver.restore(sess, tf.train.latest_checkpoint('./model/NewFaces/'))
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
@@ -508,8 +505,8 @@ def train():
     # saver.restore(sess, ckpt)
 
 
-if __name__ == "__main__":
-    train()
+#if __name__ == "__main__":
+ #   train()
    # test()
 
 
