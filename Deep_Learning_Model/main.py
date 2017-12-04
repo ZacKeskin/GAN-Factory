@@ -38,7 +38,7 @@ output_dir = os.path.join(os.getcwd(),'GAN_Model_Training')
 
 # Standard GAN
 mystandardgan = GAN(GANtype="Standard",kernel_size=[5,5])
-
+"""
 mystandardgan.train(input_dir=input_dir, 
                 target_dir=target_dir, 
                 batch_size=BATCH_SIZE, 
@@ -49,7 +49,7 @@ mystandardgan.train(input_dir=input_dir,
                 output_dir=output_dir
                 )
 """
-
+"""
 # GAN with Reconstruction Loss
 myRLgan = GAN(GANtype="RecLoss",kernel_size=[5,5])
 
@@ -63,7 +63,8 @@ myRLgan.train(input_dir=input_dir,
                 output_dir=output_dir,
                 checkpoint_after_epoch=50)
 """
-"""
+
+
 # Discovery GAN
 mydiscogan = GAN(GANtype='DiscoGAN',kernel_size=[5,5])
 
@@ -76,7 +77,7 @@ mydiscogan.train(input_dir=input_dir,
                 img_channels=CHANNEL,
                 output_dir=output_dir,
                 checkpoint_after_epoch=50)
-"""
+
 # TBC: Testing
 
 #mystandardgan.test(live_data_dir)
