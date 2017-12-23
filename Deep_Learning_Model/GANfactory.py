@@ -413,7 +413,7 @@ class GAN():
                 # Update the generator
                 for k in range(g_iters): 
                     _, gLoss,summary = sess.run([trainer_g, g_loss,merged_summary_op],feed_dict = g_feed_dict)
-
+                    summary_writer.add_summary(summary,i*batch_count +j)
             # Save check point every n epochs
             if (i+1)%checkpoint_after_epoch == 0:
                 if not os.path.exists('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())):
