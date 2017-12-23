@@ -104,6 +104,7 @@ ENV/
 /wiki
 *.jpg
 *.jpeg
+/data
 
 # Private
 *private*
