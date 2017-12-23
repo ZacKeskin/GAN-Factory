@@ -259,7 +259,20 @@ class GAN():
                 d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)  # This optimizes the discriminator.
             with tf.name_scope('G_loss'):    
                 g_loss = -tf.reduce_mean(fake_result)  # This optimizes the generator.
+
+            #for TensorBoard PATH
+
+            logs_name= 'logFolder_for_' +  'STANDARD'
+            logs_path=os.path.join('logFolder',logs_name)
             
+            #TENSORBOARD SCALARS
+            tf.summary.scalar("Generator Loss", g_loss)
+            tf.summary.scalar("Discriminator Loss", d_loss)
+            
+        
+            
+
+        
             
 
         elif self.GANtype.upper() == "RECLOSS":
@@ -288,8 +301,19 @@ class GAN():
             with tf.name_scope('G_loss'):    
                 g_loss = -tf.reduce_mean(fake_result) + tf.reduce_mean(reconstructed_loss) # This optimizes the generator.
             
-            #tf.summary.scalar("Reconstructed Loss", reconstructed_loss)
-           
+            
+            #for TensorBoard PATH
+
+            logs_name= 'logFolder_for_' +  'RECLOSS'
+            logs_path=os.path.join('logFolder',logs_name)
+            
+            #TENSORBOARD SCALARS
+            tf.summary.scalar("Generator Loss", g_loss)
+            tf.summary.scalar("Discriminator Loss", d_loss)
+            tf.summary.scalar("Reco Loss", tf.reduce_mean(reconstructed_loss))
+            #merged_summary_op = tf.summary.merge_all()
+
+
         elif self.GANtype.upper() == "DISCOGAN":
             print('Training DiscoGAN')
             
@@ -337,7 +361,16 @@ class GAN():
             with tf.name_scope('G_loss'):    
                 g_loss= generator_loss + reconstructed_loss
 
-            #tf.summary.scalar("Reconstructed Loss", reconstructed_loss)
+            #for TensorBoard PATH
+
+            logs_name= 'logFolder_for_' +  'DISCO'
+            logs_path=os.path.join('logFolder',logs_name)
+            
+            #TENSORBOARD SCALARS
+            tf.summary.scalar("Generator Loss", g_loss)
+            tf.summary.scalar("Discriminator Loss", d_loss)
+            tf.summary.scalar("Reco Loss", reconstructed_loss)
+            #merged_summary_op = tf.summary.merge_all()
 
 
         # ------ Training Steps Applicable to all Models ------- #
@@ -355,22 +388,7 @@ class GAN():
         # clip discriminator weights between the values -0.01 and 0.01
         d_clip = [v.assign(tf.clip_by_value(v, -0.01, 0.01)) for v in d_vars]
 
-       #for TensorBoard
-
-        logs_name= 'logFolder_for_' +  self.GANtype
-        logs_path=os.path.join('logFolder',logs_name)
-        
-
-
-        #TENSORBOARD
-        tf.summary.scalar("Generator Loss", g_loss)
-        tf.summary.scalar("Discriminator Loss", d_loss)
-
-        if(self.GANtype.upper() == "DISCOGAN" or self.GANtype.upper() == "RecLoss" ):
-            tf.summary.scalar("Reconstructed Loss", reconstructed_loss)
-            
-
-        merged_summary_op = tf.summary.merge_all()
+       
 
         sess = tf.Session()
         saver = tf.train.Saver()
@@ -383,6 +401,7 @@ class GAN():
         sess.run(tf.local_variables_initializer())
 
         summary_writer = tf.summary.FileWriter(logs_path, sess.graph)
+        merged_summary_op = tf.summary.merge_all()
         
         # Prepare Checkpoint
         save_path = saver.save(sess, "/tmp/model.ckpt")
@@ -402,6 +421,7 @@ class GAN():
                 d_iters = 2
                 g_iters = 1
 
+                
                 # Update the discriminator
                 for k in range(d_iters):
                     train_image = sess.run(input_batch)
@@ -418,8 +438,22 @@ class GAN():
 
                 # Update the generator
                 for k in range(g_iters): 
-                    _, gLoss,summary = sess.run([trainer_g, g_loss,merged_summary_op],feed_dict = g_feed_dict)   
+                    train_image = sess.run(input_batch)
+                    train_image2 = sess.run(target_batch)
+                    sess.run(d_clip)
+                    if self.GANtype.upper() == 'DISCOGAN':
+                        d_feed_dict = {target_image: train_image2, input_image: train_image, is_train: True}
+                        g_feed_dict = {input_image: train_image, target_image: train_image2,  is_train: True}
+                    else:        
+                        d_feed_dict = {target_image: train_image2, input_image: train_image, is_train: True}
+                        g_feed_dict = {target_image: train_image2, is_train: True}
+
+                    _, gLoss= sess.run([trainer_g, g_loss],feed_dict = g_feed_dict)   
+                    summary =sess.run(merged_summary_op,feed_dict = d_feed_dict)
                     summary_writer.add_summary(summary,i*batch_count +j)
+         
+                
+                
             # Save check point every n epochs
             if (i+1)%checkpoint_after_epoch == 0:
                 if not os.path.exists('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())):
