@@ -255,8 +255,10 @@ class GAN():
             fake_result = D1.connect(fake_image, is_train, reuse=True)
 
             # Calculate the loss between the generated image and real image
-            d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)  # This optimizes the discriminator.
-            g_loss = -tf.reduce_mean(fake_result)  # This optimizes the generator.
+            with tf.name_scope('D_loss'):
+                d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)  # This optimizes the discriminator.
+            with tf.name_scope('G_loss'):  
+                g_loss = -tf.reduce_mean(fake_result)  # This optimizes the generator.
             
             
 
@@ -277,11 +279,14 @@ class GAN():
             fake_result = D1.connect(fake_image, is_train, reuse=True)
 
             #reconstructed loss
-            reconstructed_loss=tf.metrics.mean_squared_error(target_image, reconstructed_image)
+            with tf.name_scope('R_loss'):
+                reconstructed_loss=tf.metrics.mean_squared_error(target_image, reconstructed_image)
             
-            # Calculate the loss between the generated image and real image
-            d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)  # This optimizes the discriminator.
-            g_loss = -tf.reduce_mean(fake_result) + tf.reduce_mean(reconstructed_loss) # This optimizes the generator.
+             # Calculate the loss between the generated image and real image
+            with tf.name_scope('D_loss'): 
+                d_loss = tf.reduce_mean(fake_result) - tf.reduce_mean(real_result)  # This optimizes the discriminator.
+            with tf.name_scope('G_loss'): 
+                g_loss = -tf.reduce_mean(fake_result) + tf.reduce_mean(reconstructed_loss) # This optimizes the generator.
             
             
            
@@ -320,11 +325,17 @@ class GAN():
             #calculate the loss between the generated image and real image
             d_input_loss = tf.reduce_mean(fake_input_result) - tf.reduce_mean(real_input_result)  # This optimizes discriminator (1).
             d_target_loss = tf.reduce_mean(fake_target_result) - tf.reduce_mean(real_target_result)  # This optimizes discriminator (2).
-            d_loss = d_input_loss + d_target_loss
 
-            generator_loss = -(tf.reduce_mean(fake_target_result)  +tf.reduce_mean(fake_input_result)) # This optimizes the generators.
-            reconstructed_loss = tf.reduce_mean(reconstructed_target_loss) + tf.reduce_mean(reconstructed_input_loss) # This optimizes the generators.
-            g_loss= generator_loss + reconstructed_loss
+            with tf.name_scope('D_loss'):  
+                d_loss = d_input_loss + d_target_loss
+
+            generator_loss = -(tf.reduce_mean(fake_target_result)  +tf.reduce_mean(fake_input_result)) # This optimizes the generators. 
+
+            with tf.name_scope('R_loss'):  
+                reconstructed_loss = tf.reduce_mean(reconstructed_target_loss) + tf.reduce_mean(reconstructed_input_loss) # This optimizes the generators.
+
+            with tf.name_scope('G_loss'):
+                g_loss= generator_loss + reconstructed_loss
 
         
 
@@ -344,6 +355,15 @@ class GAN():
         # clip discriminator weights between the values -0.01 and 0.01
         d_clip = [v.assign(tf.clip_by_value(v, -0.01, 0.01)) for v in d_vars]
 
+        #TENSORBOARD
+        tf.summary.scalar("Generator Loss", g_loss)
+        tf.summary.scalar("Discriminator Loss", d_loss)
+
+        if(self.GANtype.upper() == "DISCOGAN" or self.GANtype.upper() == "RecLoss" ):
+            tf.summary.scalar("Reconstructed Loss", reconstructed_loss)
+            
+        merged_summary_op = tf.summary.merge_all()
+
 
 
         sess = tf.Session()
@@ -355,6 +375,8 @@ class GAN():
         # Initialise the variables
         sess.run(tf.global_variables_initializer())
         sess.run(tf.local_variables_initializer())
+        
+        summary_writer = tf.summary.FileWriter(output_dir, sess.graph)
         
         # Prepare Checkpoint
         save_path = saver.save(sess, "/tmp/model.ckpt")
@@ -390,7 +412,7 @@ class GAN():
 
                 # Update the generator
                 for k in range(g_iters): 
-                    _, gLoss = sess.run([trainer_g, g_loss],feed_dict = g_feed_dict)   
+                    _, gLoss,summary = sess.run([trainer_g, g_loss,merged_summary_op],feed_dict = g_feed_dict)
 
             # Save check point every n epochs
             if (i+1)%checkpoint_after_epoch == 0:
