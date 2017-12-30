@@ -258,12 +258,12 @@ class GAN():
                 input_dir=os.path.join(os.getcwd(),'input'), 
                 target_dir=os.path.join(os.getcwd(),'target'), 
                 batch_size=128, 
-                n_epochs=10,
+                n_epochs=1,
                 img_height=64,
                 img_width=64,
                 img_channels=3,
                 output_dir=os.getcwd(),
-                checkpoint_after_epoch=10):  #optimiser,loss, 
+                checkpoint_after_epoch=1):  #optimiser,loss, 
         #self.batch_size = batch_size
         #self.n_epochs = n_epochs
 
@@ -475,10 +475,10 @@ class GAN():
                     sess.run(d_clip)
                     if self.GANtype.upper() == 'DISCOGAN':
                         d_feed_dict = {target_image: train_image2, input_image: train_image, is_train: True}
-                        g_feed_dict = {input_image: train_image, target_image: train_image2,  is_train: True}
+                       
                     else:        
                         d_feed_dict = {target_image: train_image2, input_image: train_image, is_train: True}
-                        g_feed_dict = {target_image: train_image2, is_train: True}
+                        
                     
                     _, dLoss = sess.run([trainer_d, d_loss],feed_dict = d_feed_dict)
 
@@ -486,13 +486,13 @@ class GAN():
                 for k in range(g_iters): 
                     train_image = sess.run(input_batch)
                     train_image2 = sess.run(target_batch)
-                    sess.run(d_clip)
+                    
                     if self.GANtype.upper() == 'DISCOGAN':
-                        d_feed_dict = {target_image: train_image2, input_image: train_image, is_train: True}
                         g_feed_dict = {input_image: train_image, target_image: train_image2,  is_train: True}
+                        
                     else:        
-                        d_feed_dict = {target_image: train_image2, input_image: train_image, is_train: True}
                         g_feed_dict = {target_image: train_image2, is_train: True}
+                        
 
                     _, gLoss= sess.run([trainer_g, g_loss],feed_dict = g_feed_dict)   
                     summary =sess.run(merged_summary_op,feed_dict = d_feed_dict)
@@ -505,13 +505,13 @@ class GAN():
                 if not os.path.exists('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())):
                     os.makedirs('./checkpoints/' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
                 saver.save(sess, './checkpoints/' +'{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))  
-            if (i+1)%10 == 0:
+            if (i+1)%1 == 0:
                 # save images every 10 epochs
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
                 
                 imgtestG = sess.run(fake_image, feed_dict=g_feed_dict)
-                imgtestD = sess.run(fake_image,feed_dict=d_feed_dict)
+                imgtestD = sess.run(fake_target_image,feed_dict=d_feed_dict)
 
                 if batch_size > 8:
                     rows = int(batch_size / 8)
@@ -603,5 +603,3 @@ class GAN():
             
             coord.request_stop()
             coord.join(threads)
-
-
