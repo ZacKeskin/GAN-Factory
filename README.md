@@ -2,41 +2,47 @@
 Working Repository for Deep Learning Group Project
 
 Team:
-- Gideon Acquah-Harrison
+- Gideon Acquaah-Harrison
 - Sibi Chandar
-- Zac Keskin
-- Lena Petersen
+- Zac Keskin (ID: 16137321)
+- Lena Petersen (ID: 17080280)
 
 
 # Project 
 
-- Comparing the performance of WGANs, DiscoGANs, CycleGANs etc. in style transfer in human faces
+- Comparing the performance of plain GANs, GANs with Reconstruction Loss and DiscoGANs in style transfer in human faces
 
 - Style transfer to be investigated along lines of gender, age and emotion
 
-- Training data to be a subset from the WIKI dataset https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/
+- Training data to be a subset from the CelebA dataset http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
 
-- *We also need to schedule >2 (but assuming the more, the better) meetings with TAs/Nic during the project*
+# Collecting Data
 
+- In order to train the model, we use data from CelebA
 
-# Project Plan, Backlog & Tracker
+- We provide a simple tool (readText.py) to extract datasets of specific feature domains. This can be found in the 'CelebA Data Sort' folder within this repository.
 
-I have created an actions tracker to help alignment towards a high-level plan. I hope we can track to this and keep eachother updated, to understand where we are in real time. This comprises a GoogleSheet document, which can be found at https://docs.google.com/spreadsheets/d/1iw5dNL4kMnFnwyHyoqgyGfzPhCI-4PX7P7ThLXq8II4/edit?usp=sharing
+- The instructions.txt file, in the same folder, provides detail instructions on how to use the tool
 
+# Using the Code
 
+- A sample implementation for each of the three GAN models is included in main.py
 
-# Marking Criteria
+- To select a model, simply uncomment the relevant portions of code, or else use the GANFactory class to create your own
 
-To update this section with information on how we are graded regarding individual paper, group paper, presentation etc.
+- A number of parameters are available when instantiating each of the GANs, including source and target directories, batch, epoch and kernel size and image dimensions. These are designed to enable quick customisation of model implementations
 
+- With a GAN object, you may use the .train() method to begin learning the model. With saved weights (i.e. after training), you can test the trained implementation using .test(). This essentially runs through one more pass of the GAN with your selected input image, saving the output image in the desired directory.
+
+- Further changes to the architecture are possible by adjusting the code in GANFactory.py
 
 
 # Pre-Requisites
 
-The simplest way to align a common codebase is to install anaconda:
+We assume the user has installed anaconda:
 https://www.anaconda.com/download/#macos
 
-Most packages required are included as part of anaconda. Additionally we require raw TensorFlow
+Most packages required are included as part of anaconda. Additionally we require TensorFlow
 
 You should be able to simply run:
 ``` 
@@ -45,14 +51,5 @@ pip install TensorFlow
 
 (you may need sudo depending on your local permissions)
 
-
-
-
-
-# Code Set Up
-
-I suggest we use Jupyter notebooks to build and share the code within out work. This is because it is a common and popular format for sharing scientific work in Python, but more importantly it has modular code interpretation - i.e. you can run certain parts of the code independently, so slow steps such as training or evaluating a simple model can be done once and kept in memory whilst you then try other things (rather than having to do this each time you make a change).
-
-This is simple if you  `cd` into the cloned repo on your local machine and then type: `jupyter notebook` , and paste the link produced into your browser.
 
 
