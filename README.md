@@ -2,8 +2,8 @@
 Working Repository for Deep Learning Group Project
 
 Team:
-- Gideon Acquaah-Harrison
-- Sibi Chandar
+- Gideon Acquaah-Harrison (ID: 17107197)
+- Sibi Chandar (ID: 15041329)
 - Zac Keskin (ID: 16137321)
 - Lena Petersen (ID: 17080280)
 
